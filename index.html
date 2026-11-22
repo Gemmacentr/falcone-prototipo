@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metalmeccanica Falcone – Proposte grafiche</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #e9eef0;
+    color: #12343b;
+  }
+
+  /* Barra superiore */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    background: #12343b;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .bar a {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .bar-proposte {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar-proposte a {
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+  }
+
+  .bar-proposte a.attiva {
+    background: #d7141a;
+    border-color: #d7141a;
+  }
+
+  .bar-pagine {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .bar-pagine a {
+    opacity: 0.7;
+  }
+
+  .bar-pagine a.attiva {
+    opacity: 1;
+    border-bottom: 2px solid #d7141a;
+  }
+
+  /* Schermata */
+  .schermata {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 30px 20px 60px;
+  }
+
+  .tavola {
+    position: relative;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .tavola img {
+    display: block;
+    width: 100%;
+  }
+
+  .hotspot {
+    position: absolute;
+    display: block;
+    border-radius: 4px;
+  }
+
+  .hotspot:hover {
+    background: rgba(215, 20, 26, 0.08);
+  }
+
+  .tavola.mostra-link .hotspot {
+    background: rgba(215, 20, 26, 0.2);
+    outline: 2px solid #d7141a;
+  }
+
+  /* Pagina iniziale */
+  .intro {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 20px;
+  }
+
+  .intro h1 {
+    margin-bottom: 8px;
+    font-size: 32px;
+  }
+
+  .intro p {
+    margin-bottom: 40px;
+    color: #4a6268;
+  }
+
+  .scelte {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 30px;
+  }
+
+  .scelta {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: 480px;
+    background: #fff;
+    color: #12343b;
+    text-decoration: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .scelta-img {
+    height: 420px;
+    overflow: hidden;
+  }
+
+  .scelta-img img {
+    display: block;
+    width: 100%;
+  }
+
+  .scelta-testo {
+    padding: 20px 24px;
+    border-top: 4px solid #d7141a;
+  }
+
+  .scelta-testo h2 {
+    margin-bottom: 4px;
+    font-size: 22px;
+  }
+
+  .scelta-testo span {
+    color: #d7141a;
+    font-weight: bold;
+  }
+
+  .scelta:hover .scelta-testo h2 {
+    color: #d7141a;
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+  // Pagine: home, azienda, lavorazioni, settori, qualita, contatti
+  const PAGINE = ['home', 'azienda', 'lavorazioni', 'settori', 'qualita', 'contatti'];
+  const NOMI = {
+    home: 'Home',
+    azienda: 'Azienda',
+    lavorazioni: 'Lavorazioni',
+    settori: 'Settori',
+    qualita: 'Qualità',
+    contatti: 'Contatti'
+  };
+
+  // Menu in alto: y = centro del testo, voci = { pagina: [x inizio, x fine] }
+  function menu(y, voci) {
+    return Object.keys(voci).map(function (pagina) {
+      return [voci[pagina][0] - 6, y - 13, voci[pagina][1] + 6, y + 13, pagina];
+    });
+  }
+
+  // Colonna di link nel footer
+  function colonna(x1, x2, ys, pagine) {
+    return ys.map(function (y, i) {
+      return [x1 - 4, y - 9, x2 + 4, y + 9, pagine[i]];
+    });
+  }
+
+  function footer(xSx, xDx, ys) {
+    return colonna(xSx, xSx + 55, ys, ['home', 'azienda', 'lavorazioni'])
+      .concat(colonna(xDx, xDx + 50, ys, ['settori', 'qualita', 'contatti']));
+  }
+
+  // Area cliccabile: [x1, y1, x2, y2, pagina] in pixel dell'immagine
+  const PROPOSTE = {
+    a: {
+      nome: 'Proposta A',
+      pagine: {
+        home: {
+          w: 853, h: 1280,
+          link: [
+            [45, 5, 285, 48, 'home'],
+            ...menu(24, { azienda: [327, 365], lavorazioni: [385, 438], settori: [458, 490], qualita: [510, 545], contatti: [563, 602] }),
+            [684, 10, 816, 39, 'contatti'],
+            [60, 278, 227, 310, 'contatti'],
+            [462, 562, 610, 596, 'azienda'],
+            [40, 710, 817, 864, 'lavorazioni'],
+            [325, 915, 805, 990, 'settori'],
+            [45, 1105, 193, 1135, 'qualita'],
+            ...colonna(255, 305, [1186, 1200, 1215, 1229], ['azienda', 'lavorazioni', 'settori', 'qualita'])
+          ]
+        },
+        azienda: {
+          w: 853, h: 1280,
+          link: [
+            [55, 5, 265, 42, 'home'],
+            ...menu(23, { home: [322, 347], azienda: [367, 402], lavorazioni: [423, 472], settori: [494, 522], qualita: [544, 575], contatti: [596, 630] }),
+            [677, 10, 793, 37, 'contatti'],
+            [58, 77, 86, 93, 'home'],
+            [443, 1104, 585, 1137, 'lavorazioni'],
+            ...footer(291, 391, [1198, 1213, 1227])
+          ]
+        },
+        lavorazioni: {
+          w: 853, h: 1280,
+          link: [
+            [40, 10, 258, 55, 'home'],
+            ...menu(31, { home: [336, 363], azienda: [380, 412], lavorazioni: [432, 484], settori: [504, 532], qualita: [552, 583], contatti: [597, 633] }),
+            [678, 17, 810, 47, 'contatti'],
+            [620, 1122, 812, 1159, 'contatti'],
+            ...footer(337, 478, [1212, 1229, 1246])
+          ]
+        },
+        settori: {
+          w: 853, h: 1280,
+          link: [
+            [48, 22, 280, 64, 'home'],
+            ...menu(43, { home: [316, 345], azienda: [366, 401], lavorazioni: [422, 482], settori: [503, 535], qualita: [555, 590], contatti: [611, 652] }),
+            [681, 28, 819, 58, 'contatti'],
+            [48, 1067, 248, 1106, 'contatti'],
+            [642, 1188, 808, 1224, 'contatti'],
+            ...footer(348, 489, [1185, 1206, 1228])
+          ]
+        },
+        qualita: {
+          w: 853, h: 1280,
+          link: [
+            [48, 22, 280, 64, 'home'],
+            ...menu(43, { home: [316, 345], azienda: [366, 401], lavorazioni: [422, 482], settori: [503, 535], qualita: [555, 590], contatti: [611, 652] }),
+            [681, 28, 819, 58, 'contatti'],
+            [642, 1191, 808, 1228, 'contatti'],
+            ...footer(348, 489, [1190, 1211, 1232])
+          ]
+        },
+        contatti: {
+          w: 853, h: 1280,
+          link: [
+            [48, 22, 280, 64, 'home'],
+            ...menu(43, { home: [316, 345], azienda: [366, 401], lavorazioni: [422, 482], settori: [503, 535], qualita: [555, 590], contatti: [611, 652] }),
+            [681, 28, 819, 58, 'contatti'],
+            [642, 1188, 808, 1224, 'contatti'],
+            ...footer(348, 489, [1180, 1202, 1224])
+          ]
+        }
+      }
+    },
+    b: {
+      nome: 'Proposta B',
+      pagine: {
+        home: {
+          w: 730, h: 1108,
+          link: [
+            [20, 10, 210, 48, 'home'],
+            ...menu(30, { home: [271, 297], azienda: [315, 348], lavorazioni: [365, 415], settori: [432, 462], qualita: [480, 507], contatti: [524, 560] }),
+            [577, 16, 715, 45, 'contatti'],
+            [41, 347, 186, 382, 'lavorazioni'],
+            [435, 677, 556, 705, 'lavorazioni'],
+            [45, 903, 148, 930, 'settori'],
+            [551, 960, 695, 992, 'contatti'],
+            ...footer(287, 404, [1050, 1067, 1084])
+          ]
+        },
+        azienda: {
+          w: 726, h: 1098,
+          link: [
+            [20, 8, 210, 42, 'home'],
+            ...menu(24, { home: [266, 292], azienda: [310, 343], lavorazioni: [360, 410], settori: [428, 458], qualita: [475, 503], contatti: [521, 557] }),
+            [573, 10, 711, 39, 'contatti'],
+            [549, 948, 699, 977, 'contatti'],
+            ...footer(290, 387, [1033, 1050, 1067])
+          ]
+        },
+        lavorazioni: {
+          w: 730, h: 1096,
+          link: [
+            [20, 5, 210, 36, 'home'],
+            ...menu(19, { home: [262, 290], azienda: [307, 340], lavorazioni: [358, 410], settori: [428, 458], qualita: [475, 503], contatti: [523, 559] }),
+            [586, 6, 714, 34, 'contatti'],
+            [332, 766, 504, 792, 'contatti'],
+            [550, 948, 701, 979, 'contatti'],
+            ...footer(290, 388, [1040, 1057, 1074])
+          ]
+        },
+        settori: {
+          w: 722, h: 1076,
+          link: [
+            [18, 6, 206, 40, 'home'],
+            ...menu(22, { home: [245, 272], azienda: [290, 325], lavorazioni: [342, 390], settori: [408, 438], qualita: [457, 482], contatti: [507, 545] }),
+            [559, 8, 703, 37, 'contatti'],
+            [547, 898, 697, 928, 'contatti'],
+            ...footer(286, 414, [980, 997, 1014])
+          ]
+        },
+        qualita: {
+          w: 726, h: 1092,
+          link: [
+            [20, 8, 210, 42, 'home'],
+            ...menu(24, { home: [266, 292], azienda: [310, 343], lavorazioni: [360, 410], settori: [428, 458], qualita: [475, 503], contatti: [521, 557] }),
+            [573, 10, 711, 39, 'contatti'],
+            [549, 946, 699, 975, 'contatti'],
+            ...footer(290, 387, [1030, 1047, 1064])
+          ]
+        },
+        contatti: {
+          w: 718, h: 1078,
+          link: [
+            [20, 8, 210, 42, 'home'],
+            ...menu(22, { home: [249, 276], azienda: [292, 327], lavorazioni: [344, 392], settori: [409, 438], qualita: [455, 485], contatti: [503, 538] }),
+            [569, 10, 708, 39, 'contatti'],
+            [549, 920, 699, 950, 'contatti'],
+            ...footer(290, 398, [1021, 1038, 1055])
+          ]
+        }
+      }
+    }
+  };
+
+  const app = document.getElementById('app');
+
+  function percento(valore, totale) {
+    return (valore / totale * 100) + '%';
+  }
+
+  function mostraIntro() {
+    document.title = 'Metalmeccanica Falcone – Proposte grafiche';
+    app.innerHTML =
+      '<div class="intro">' +
+        '<h1>Metalmeccanica Falcone</h1>' +
+        '<p>Due proposte grafiche per il nuovo sito. Scegli una proposta e naviga tra le pagine cliccando sul menu e sui bottoni.</p>' +
+        '<div class="scelte">' +
+          '<a class="scelta" href="#a/home">' +
+            '<div class="scelta-img"><img src="img/a-home.jpg" alt="Proposta A"></div>' +
+            '<div class="scelta-testo"><h2>Proposta A</h2><span>Apri la proposta →</span></div>' +
+          '</a>' +
+          '<a class="scelta" href="#b/home">' +
+            '<div class="scelta-img"><img src="img/b-home.jpg" alt="Proposta B"></div>' +
+            '<div class="scelta-testo"><h2>Proposta B</h2><span>Apri la proposta →</span></div>' +
+          '</a>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function mostraPagina(idProposta, idPagina) {
+    const proposta = PROPOSTE[idProposta];
+    const pagina = proposta.pagine[idPagina];
+    document.title = proposta.nome + ' – ' + NOMI[idPagina];
+
+    let proposteHtml = '<a href="#">← Proposte</a>';
+    Object.keys(PROPOSTE).forEach(function (id) {
+      const classe = id === idProposta ? ' class="attiva"' : '';
+      proposteHtml += '<a href="#' + id + '/' + idPagina + '"' + classe + '>' + PROPOSTE[id].nome + '</a>';
+    });
+
+    let pagineHtml = '';
+    PAGINE.forEach(function (id) {
+      const classe = id === idPagina ? ' class="attiva"' : '';
+      pagineHtml += '<a href="#' + idProposta + '/' + id + '"' + classe + '>' + NOMI[id] + '</a>';
+    });
+
+    let linkHtml = '';
+    pagina.link.forEach(function (l) {
+      linkHtml += '<a class="hotspot" href="#' + idProposta + '/' + l[4] + '" title="' + NOMI[l[4]] + '" style="' +
+        'left:' + percento(l[0], pagina.w) + ';' +
+        'top:' + percento(l[1], pagina.h) + ';' +
+        'width:' + percento(l[2] - l[0], pagina.w) + ';' +
+        'height:' + percento(l[3] - l[1], pagina.h) + ';"></a>';
+    });
+
+    app.innerHTML =
+      '<div class="bar">' +
+        '<div class="bar-proposte">' + proposteHtml + '</div>' +
+        '<div class="bar-pagine">' + pagineHtml + '</div>' +
+      '</div>' +
+      '<div class="schermata">' +
+        '<div class="tavola" style="max-width:' + pagina.w + 'px">' +
+          '<img src="img/' + idProposta + '-' + idPagina + '.jpg" alt="' + proposta.nome + ' – ' + NOMI[idPagina] + '">' +
+          linkHtml +
+        '</div>' +
+      '</div>';
+
+    // Clic su un punto non cliccabile: evidenzia per un attimo le aree cliccabili
+    const tavola = app.querySelector('.tavola');
+    tavola.addEventListener('click', function (e) {
+      if (e.target.classList.contains('hotspot')) {
+        return;
+      }
+      tavola.classList.add('mostra-link');
+      setTimeout(function () {
+        tavola.classList.remove('mostra-link');
+      }, 700);
+    });
+
+    window.scrollTo(0, 0);
+  }
+
+  function route() {
+    const parti = location.hash.replace('#', '').split('/');
+    if (PROPOSTE[parti[0]] && PROPOSTE[parti[0]].pagine[parti[1]]) {
+      mostraPagina(parti[0], parti[1]);
+    } else {
+      mostraIntro();
+    }
+  }
+
+  window.addEventListener('hashchange', route);
+  route();
+</script>
+</body>
+</html>
