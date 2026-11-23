@@ -109,6 +109,39 @@
     outline: 2px solid #d7141a;
   }
 
+  /* Popup progetto */
+  .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    display: none;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    background: rgba(18, 52, 59, 0.6);
+  }
+
+  .popup.aperto {
+    display: flex;
+  }
+
+  .popup-box {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .popup-box img {
+    display: block;
+    width: 100%;
+  }
+
   /* Pagina iniziale */
   .intro {
     max-width: 1100px;
@@ -181,13 +214,14 @@
 <div id="app"></div>
 
 <script>
-  // Pagine: home, azienda, lavorazioni, settori, qualita, contatti
-  const PAGINE = ['home', 'azienda', 'lavorazioni', 'settori', 'qualita', 'contatti'];
+  // Pagine: home, azienda, lavorazioni, settori, progetti, qualita, contatti
+  const PAGINE = ['home', 'azienda', 'lavorazioni', 'settori', 'progetti', 'qualita', 'contatti'];
   const NOMI = {
     home: 'Home',
     azienda: 'Azienda',
     lavorazioni: 'Lavorazioni',
     settori: 'Settori',
+    progetti: 'Progetti',
     qualita: 'Qualità',
     contatti: 'Contatti'
   };
@@ -281,6 +315,24 @@
             [642, 1188, 808, 1224, 'contatti'],
             ...footer(348, 489, [1180, 1202, 1224])
           ]
+        },
+        progetti: {
+          w: 785, h: 610,
+          link: [
+            [36, 8, 236, 48, 'home'],
+            ...menu(28, { home: [266, 293], azienda: [309, 344], lavorazioni: [359, 407], settori: [423, 452], progetti: [468, 501], qualita: [517, 548], contatti: [563, 598] }),
+            [623, 14, 745, 43, 'contatti'],
+            [32, 313, 262, 585, 'popup'],
+            [279, 313, 509, 585, 'popup'],
+            [526, 313, 756, 585, 'popup']
+          ],
+          popup: {
+            w: 656, h: 390,
+            link: [
+              [598, 8, 646, 54, 'chiudi'],
+              [486, 331, 619, 367, 'contatti']
+            ]
+          }
         }
       }
     },
@@ -350,6 +402,24 @@
             [549, 920, 699, 950, 'contatti'],
             ...footer(290, 398, [1021, 1038, 1055])
           ]
+        },
+        progetti: {
+          w: 785, h: 610,
+          link: [
+            [38, 8, 236, 48, 'home'],
+            ...menu(28, { home: [268, 294], azienda: [311, 345], lavorazioni: [361, 409], settori: [425, 454], progetti: [470, 504], qualita: [521, 551], contatti: [568, 603] }),
+            [633, 14, 757, 43, 'contatti'],
+            [32, 309, 264, 572, 'popup'],
+            [277, 309, 509, 572, 'popup'],
+            [522, 309, 755, 572, 'popup']
+          ],
+          popup: {
+            w: 661, h: 392,
+            link: [
+              [610, 6, 654, 50, 'chiudi'],
+              [468, 329, 615, 368, 'contatti']
+            ]
+          }
         }
       }
     }
@@ -361,6 +431,24 @@
     return (valore / totale * 100) + '%';
   }
 
+  // Aree cliccabili: una pagina, il popup ('popup') o la chiusura del popup ('chiudi')
+  function creaLink(lista, w, h, idProposta) {
+    let html = '';
+    lista.forEach(function (l) {
+      const stile = 'left:' + percento(l[0], w) + ';' +
+        'top:' + percento(l[1], h) + ';' +
+        'width:' + percento(l[2] - l[0], w) + ';' +
+        'height:' + percento(l[3] - l[1], h) + ';';
+
+      if (l[4] === 'popup' || l[4] === 'chiudi') {
+        html += '<a class="hotspot" href="#" data-azione="' + l[4] + '" style="' + stile + '"></a>';
+      } else {
+        html += '<a class="hotspot" href="#' + idProposta + '/' + l[4] + '" title="' + NOMI[l[4]] + '" style="' + stile + '"></a>';
+      }
+    });
+    return html;
+  }
+
   function mostraIntro() {
     document.title = 'Metalmeccanica Falcone – Proposte grafiche';
     app.innerHTML =
@@ -369,11 +457,11 @@
         '<p>Due proposte grafiche per il nuovo sito. Scegli una proposta e naviga tra le pagine cliccando sul menu e sui bottoni.</p>' +
         '<div class="scelte">' +
           '<a class="scelta" href="#a/home">' +
-            '<div class="scelta-img"><img src="img/a-home.jpg" alt="Proposta A"></div>' +
+            '<div class="scelta-img"><img src="img/proposta-a/home.jpg" alt="Proposta A"></div>' +
             '<div class="scelta-testo"><h2>Proposta A</h2><span>Apri la proposta →</span></div>' +
           '</a>' +
           '<a class="scelta" href="#b/home">' +
-            '<div class="scelta-img"><img src="img/b-home.jpg" alt="Proposta B"></div>' +
+            '<div class="scelta-img"><img src="img/proposta-b/home.jpg" alt="Proposta B"></div>' +
             '<div class="scelta-testo"><h2>Proposta B</h2><span>Apri la proposta →</span></div>' +
           '</a>' +
         '</div>' +
@@ -397,14 +485,18 @@
       pagineHtml += '<a href="#' + idProposta + '/' + id + '"' + classe + '>' + NOMI[id] + '</a>';
     });
 
-    let linkHtml = '';
-    pagina.link.forEach(function (l) {
-      linkHtml += '<a class="hotspot" href="#' + idProposta + '/' + l[4] + '" title="' + NOMI[l[4]] + '" style="' +
-        'left:' + percento(l[0], pagina.w) + ';' +
-        'top:' + percento(l[1], pagina.h) + ';' +
-        'width:' + percento(l[2] - l[0], pagina.w) + ';' +
-        'height:' + percento(l[3] - l[1], pagina.h) + ';"></a>';
-    });
+    const linkHtml = creaLink(pagina.link, pagina.w, pagina.h, idProposta);
+
+    let popupHtml = '';
+    if (pagina.popup) {
+      popupHtml =
+        '<div class="popup">' +
+          '<div class="popup-box" style="max-width:' + pagina.popup.w + 'px">' +
+            '<img src="img/proposta-' + idProposta + '/' + idPagina + '-popup.jpg" alt="Dettaglio progetto">' +
+            creaLink(pagina.popup.link, pagina.popup.w, pagina.popup.h, idProposta) +
+          '</div>' +
+        '</div>';
+    }
 
     app.innerHTML =
       '<div class="bar">' +
@@ -413,10 +505,11 @@
       '</div>' +
       '<div class="schermata">' +
         '<div class="tavola" style="max-width:' + pagina.w + 'px">' +
-          '<img src="img/' + idProposta + '-' + idPagina + '.jpg" alt="' + proposta.nome + ' – ' + NOMI[idPagina] + '">' +
+          '<img src="img/proposta-' + idProposta + '/' + idPagina + '.jpg" alt="' + proposta.nome + ' – ' + NOMI[idPagina] + '">' +
           linkHtml +
         '</div>' +
-      '</div>';
+      '</div>' +
+      popupHtml;
 
     // Clic su un punto non cliccabile: evidenzia per un attimo le aree cliccabili
     const tavola = app.querySelector('.tavola');
@@ -429,6 +522,26 @@
         tavola.classList.remove('mostra-link');
       }, 700);
     });
+
+    // Popup del progetto
+    const popup = app.querySelector('.popup');
+    if (popup) {
+      app.querySelectorAll('[data-azione="popup"]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          popup.classList.add('aperto');
+        });
+      });
+      popup.querySelector('[data-azione="chiudi"]').addEventListener('click', function (e) {
+        e.preventDefault();
+        popup.classList.remove('aperto');
+      });
+      popup.addEventListener('click', function (e) {
+        if (e.target === popup) {
+          popup.classList.remove('aperto');
+        }
+      });
+    }
 
     window.scrollTo(0, 0);
   }
